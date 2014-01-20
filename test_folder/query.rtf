@@ -1,0 +1,45 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1138\cocoasubrtf510
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\f0\fs24 \cf0 select  count(icb.ipc_id),ipb.* from info_post_b ipb,info_comments_b icb \
+where ipb.user_id =1 and\
+ipb.post_id = icb.post_id \
+-- icv.created_on \
+group by ipb.post_id\
+order by icb.created_on desc;\
+\
+\
+\
+select ipv.* from info_comments_v icv,info_post_v ipv \
+where icv.user_id = 1 and\
+icv.post_id = ipv.post_id\
+group by icv.post_id;\
+\
+\
+\
+select * from \
+(select @rownum:=@rownum+1 as rank,post_id,distance,post_content,prating,nrating,full_name,user_id,img,created_on,correct,last_update_date,ccount,if(user_rating='r1',1,0) puser_rating, if(user_rating='r2',1,0) nuser_rating,type from \
+(select (6371 * acos( cos( radians(SUBSTRING(fc.g_coord,1,LOCATE(',',fc.g_coord)-1))) * cos( radians( SUBSTRING(pv.g_coord,1,LOCATE(',',pv.g_coord)-1) ) ) * \
+cos( radians(SUBSTRING(fc.g_coord,LOCATE(',',fc.g_coord)+1)) - radians(SUBSTRING(pv.g_coord,LOCATE(',',pv.g_coord)+1)) ) + sin( radians(SUBSTRING(fc.g_coord,\
+1,LOCATE(',',fc.g_coord)-1)) ) * sin( radians(SUBSTRING(pv.g_coord,1,LOCATE(',',pv.g_coord)-1)) ) )) AS distance ,ol.meaning as type, \
+(select ifnull(if(r1=1,'r1','r2'),0) r  from pc_ratings_v prv where prv.user_id = 1 and prv.post_id = ipv.post_id) as user_rating, \
+ipv.post_id,ipv.created_on ,ipv.post_content,concat(rdv.first_name,' ',rdv.last_name) as full_name,rdv.user_id,rdv.img,ipv.correct,ipv.last_update_date, \
+sum(ifnull(prv.r1,0)) as prating,sum(ifnull(prv.r2,0)) as nrating, (select count(icv.post_id) from info_comments_v icv where icv.post_id = ipv.post_id) as ccount \
+from info_post_v ipv left join pc_ratings_v prv on (ipv.post_id = prv.post_id),properties_v pv,renters_details_v rdv,or_lookups ol, info_comments_v icv, \
+(select g_coord from properties_v where property_id = 2) AS fc, (SELECT @rownum:=0) r \
+where 1=1 and \
+ol.lookup_type = 'post_type' and \
+ol.lookup_code = ipv.type and\
+ipv.property_id = pv.property_id and \
+ipv.user_id = rdv.user_id and \
+ifnull(prv.block,0) <> 1 and \
+prv.ipc_id is null and \
+ipv.user_id = 1 and \
+ipv.post_id = icv.post_id \
+group by ipv.post_id \
+-- having ROUND(distance) <=4\
+order by icv.created_on ) rank_info) complete_info \
+where rank between 1 and 10;}
