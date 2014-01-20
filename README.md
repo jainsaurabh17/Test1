@@ -2,7 +2,7 @@ Hello,
 
 This is Testing.
 
-This is a branch update.
+branch to sample
 
 Hope this too works.
 
